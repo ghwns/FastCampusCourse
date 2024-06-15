@@ -8,5 +8,4 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
 
     public Optional<PostEntity> findFirstByIdAndStatusOrderByIdDesc(Long id, String status);
 
-    public Optional<PostEntity> findByStatus(String Status);
 }

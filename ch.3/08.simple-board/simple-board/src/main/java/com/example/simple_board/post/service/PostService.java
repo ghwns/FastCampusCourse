@@ -1,11 +1,15 @@
 package com.example.simple_board.post.service;
 
+import com.example.simple_board.board.db.BoardRepository;
+import com.example.simple_board.common.API;
+import com.example.simple_board.common.Pagination;
 import com.example.simple_board.post.db.PostEntity;
 import com.example.simple_board.post.db.PostRepository;
 import com.example.simple_board.post.model.PostRequest;
 import com.example.simple_board.post.model.PostViewRequest;
 import com.example.simple_board.reply.service.ReplyService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,12 +20,14 @@ import java.util.List;
 public class PostService {
 
     private final PostRepository postRepository;
-    private final ReplyService replyService;
+    private final BoardRepository boardRepository;
     public PostEntity create(
             PostRequest postRequest
     ) {
+        var board = boardRepository.findById(postRequest.getBoardId()).get();
+
         var entity = PostEntity.builder()
-                .boardId(1L)
+                .board(board)
                 .userName(postRequest.getUserName())
                 .password(postRequest.getPassword())
                 .email(postRequest.getEmail())
@@ -29,7 +35,8 @@ public class PostService {
                 .title(postRequest.getTitle())
                 .content(postRequest.getContent())
                 .postedAt(LocalDateTime.now())
-                .build();
+                .build()
+                ;
 
         return postRepository.save(entity);
     }
@@ -41,9 +48,8 @@ public class PostService {
                         var format = "패스워드 불일치 %s vs %s";
                         throw new RuntimeException(String.format(format, it.getPassword(), postViewRequest.getPassword()));
                     }
-
-                    var replyList = replyService.findAllByPostId(it.getId());
-                    it.setReplyList(replyList);
+//                    var replyList = replyService.findAllByPostId(it.getId());
+//                    it.setReplyList(replyList);
 
                     return it;
                 }).orElseThrow(
@@ -53,6 +59,25 @@ public class PostService {
                 );
     }
 
+    public API<List<PostEntity>> all(Pageable pageable){
+        var list = postRepository.findAll(pageable);
+
+        var pagination = Pagination.builder()
+                .page(list.getNumber())
+                .size(list.getSize())
+                .currentElements(list.getNumberOfElements())
+                .totalElements(list.getTotalElements())
+                .totalPage(list.getTotalPages())
+                .build()
+                ;
+
+        var response = API.<List<PostEntity>>builder()
+                .body(list.toList())
+                .pagination(pagination)
+                .build();
+
+        return response;
+    }
     public void delete(PostViewRequest postViewRequest) {
         postRepository.findFirstByIdAndStatusOrderByIdDesc(postViewRequest.getPostId(),"REGISTERED")
                 .map(it -> {
@@ -70,9 +95,5 @@ public class PostService {
                             return new RuntimeException("해당 게시글이 존재하지 않습니다. : " + postViewRequest.getPostId());
                         }
                 );
-    }
-
-    public List<PostEntity> all() {
-        return postRepository.findAll();
     }
 }

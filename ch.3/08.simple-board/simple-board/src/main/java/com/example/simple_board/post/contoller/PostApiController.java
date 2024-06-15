@@ -1,10 +1,14 @@
 package com.example.simple_board.post.contoller;
 
+import com.example.simple_board.common.API;
 import com.example.simple_board.post.db.PostEntity;
 import com.example.simple_board.post.model.PostRequest;
 import com.example.simple_board.post.model.PostViewRequest;
 import com.example.simple_board.post.service.PostService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -35,9 +39,11 @@ public class PostApiController {
     }
 
     @GetMapping("/all")
-    public List<PostEntity> list(
+    public API<List<PostEntity>> list(
+            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)
+            Pageable pageable
     ){
-        return postService.all();
+        return postService.all(pageable);
     }
 
     @PostMapping("/delete")
