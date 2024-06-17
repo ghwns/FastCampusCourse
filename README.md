@@ -1,7 +1,7 @@
 # FastCampusCourse
 FastCampus BackEnd Course Repository
 
-##Installation
+## Installation
 
 ```bash
 git clone https://github.com/ghwns/FastCampusCourse.git
